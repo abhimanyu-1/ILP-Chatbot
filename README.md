@@ -1,8 +1,8 @@
-# IPL Chatbot
+# ILP Chatbot (TCS Initial Learning Program)
 
 ## 📌 Project Overview & Purpose
 
-The **IPL Chatbot** is an interactive web-based chatbot designed to provide information, insights, and updates related to the Indian Premier League (IPL). It enables users to ask questions, receive responses, and engage in conversations around IPL matches, teams, and players in an intuitive interface. The purpose of this project is to demonstrate the integration of conversational AI with a modern frontend stack, delivering an engaging fan experience.
+The **ILP Chatbot** is an interactive web-based chatbot designed to assist new joiners of the **TCS Initial Learning Program (ILP)**. It helps trainees navigate the program by answering queries, providing guidance on training modules, schedules, and resources. The purpose of this project is to simplify onboarding, reduce manual dependency, and enhance the overall learning experience for associates.
 
 ---
 
@@ -32,7 +32,7 @@ The **IPL Chatbot** is an interactive web-based chatbot designed to provide info
 
 ```bash
 git clone <repo_url>
-cd IPLChatbot
+cd ILPChatbot
 ```
 
 ### 2. Install Dependencies
@@ -73,31 +73,31 @@ python start_dev.py
    Start the Vite dev server → Opens chatbot UI in browser.
 
 2. **User Interaction**
-   User enters a query related to IPL (e.g., “Who won IPL 2023?”).
+   User enters a query related to ILP (e.g., “What is today’s training schedule?”).
 
 3. **Chatbot Processing**
 
    * Input is passed through frontend components.
-   * If integrated with backend/LLM (future scope), query is processed.
+   * If integrated with backend/knowledge base, query is processed.
    * A response is generated (static/dynamic based on configuration).
 
 4. **Response Display**
    The chatbot displays the answer in a conversational format.
 
 5. **Repeat Interaction**
-   User can continue the conversation seamlessly.
+   User can continue asking questions seamlessly.
 
 ---
 
 ## 💡 Example Use Cases & Impact
 
-* **Cricket Fans** → Ask about IPL stats, players, match updates.
-* **Engagement** → Provides an interactive way for users to stay connected with the tournament.
-* **Educational** → Example project for learning **React + Tailwind + Vite** with chatbot workflows.
-* **Future Expansion** → Can integrate with APIs (Cricbuzz, ESPN, custom ML models) for real-time data.
+* **Trainees** → Get instant answers on ILP modules, schedules, policies.
+* **HR/Faculty Support** → Reduce repetitive queries and improve efficiency.
+* **Onboarding** → Helps new joiners settle quickly by providing program-related information.
+* **Future Expansion** → Can integrate with TCS portals/APIs for real-time updates.
 
 ---
 
 ## 🚀 Impact
 
-This project shows how AI-driven conversational agents can enhance **sports fan engagement**, serve as a **learning project for developers**, and provide a scalable foundation for building domain-specific chatbots.
+This project demonstrates how a chatbot can streamline **corporate onboarding**, enhance the **training experience** for associates, and reduce manual dependency for mentors and HR coordinators.
