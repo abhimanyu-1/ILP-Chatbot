@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Shield, AlertTriangle, Clock, CheckCircle, Heart, Star, Smile, Frown, Volume2, VolumeX, Pause, Play, Mic, MicOff } from 'lucide-react';
+import { Send, Bot, User, Shield, AlertTriangle, Clock, CheckCircle, Heart, Star, Smile, Volume2, VolumeX, Pause, Play, Mic, MicOff } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -47,13 +47,13 @@ export default function ChatBot({ isAnonymous = true, onToggleAnonymous }: ChatB
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: `Hi there! I'm Maya, your emotional support companion for the TCS ILP journey! 🌟 
+      content: `Hi there! I'm Maya, your emotional support companion for the TCS ILP journey!
 
 I'm here to help you navigate not just the technical aspects of your training, but also support you through any emotional challenges you might face. Whether you're feeling anxious, overwhelmed, homesick, or just need someone to talk to - I'm here 24/7.
 
 Your mental wellbeing matters just as much as your professional growth. ${isAnonymous ? 'You\'re in a safe, anonymous space where you can share openly.' : 'Feel free to share whatever is on your mind.'} 
 
-What would you like to talk about today? 💙`,
+What would you like to talk about today?`,
       sender: 'bot',
       timestamp: new Date(),
       priority: 'low',
@@ -65,18 +65,14 @@ What would you like to talk about today? 💙`,
   const [currentAnonymous, setCurrentAnonymous] = useState(isAnonymous);
   const [showWellnessPanel, setShowWellnessPanel] = useState(false);
   const [userMood, setUserMood] = useState<'great' | 'good' | 'okay' | 'struggling' | null>(null);
-  const [showQuickActions, setShowQuickActions] = useState('emotional'); // 'emotional' or 'general'
+  const [showQuickActions, setShowQuickActions] = useState('emotional');
+  const [apiError, setApiError] = useState<string | null>(null);
   
   // Voice-related state
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentSpeech, setCurrentSpeech] = useState<SpeechSynthesisUtterance | null>(null);
   const [isListening, setIsListening] = useState(false);
-  const [voiceSettings, setVoiceSettings] = useState({
-    rate: 0.9, // Slightly slower for a calming effect
-    pitch: 1.1, // Slightly higher for a warm, friendly tone
-    volume: 0.8
-  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -99,18 +95,17 @@ What would you like to talk about today? 💙`,
   // Voice functionality
   const cleanTextForSpeech = (text: string): string => {
     return text
-      .replace(/🌟|💙|🤗|😊|💫|✨|🎯|🚀|💪|🎉|🌈|⭐|❤️|💖|🙏|👍|🔥|💡|🎨|🌸|🦋|🌺|🎵|🎶|🎭|🎪|🎨|🌟/g, '') // Remove emojis
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
-      .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
-      .replace(/\n+/g, ' ') // Replace newlines with spaces
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/[^\w\s.,!?;:()-]/g, '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/\n+/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim();
   };
 
-  const speakText = (text: string, messageId?: string) => {
+  const speakText = (text: string) => {
     if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
 
-    // Stop any current speech
     if (isSpeaking && currentSpeech) {
       speechSynthesis.cancel();
       setIsSpeaking(false);
@@ -123,12 +118,10 @@ What would you like to talk about today? 💙`,
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
     
-    // Configure voice settings for Maya's caring personality
-    utterance.rate = voiceSettings.rate;
-    utterance.pitch = voiceSettings.pitch;
-    utterance.volume = voiceSettings.volume;
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+    utterance.volume = 0.8;
 
-    // Try to select a female voice for Maya
     const voices = speechSynthesis.getVoices();
     const femaleVoice = voices.find(voice => 
       voice.name.toLowerCase().includes('female') || 
@@ -179,7 +172,6 @@ What would you like to talk about today? 💙`,
     }
   };
 
-  // Speech-to-text functionality
   const toggleListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Speech recognition is not supported in your browser.');
@@ -219,90 +211,56 @@ What would you like to talk about today? 💙`,
     recognition.start();
   };
 
-  // Mock API Integration function (since we can't make actual API calls in this environment)
+  // REAL API Integration function
   const sendToAPI = async (userMessage: string, isAnonymous: boolean) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Mock emotional intelligence responses
-    const emotionalKeywords = {
-      anxiety: ['anxious', 'worried', 'nervous', 'panic', 'fear'],
-      overwhelm: ['overwhelmed', 'too much', 'stressed', 'pressure', 'burden'],
-      confidence: ['confident', 'doubt', 'unsure', 'imposter', 'capable'],
-      homesick: ['homesick', 'miss home', 'family', 'lonely', 'isolated'],
-      support: ['help', 'support', 'guidance', 'advice', 'assistance']
-    };
-
-    const lowerMessage = userMessage.toLowerCase();
-    const detectedEmotions: string[] = [];
-
-    // Detect emotions
-    Object.entries(emotionalKeywords).forEach(([emotion, keywords]) => {
-      if (keywords.some(keyword => lowerMessage.includes(keyword))) {
-        detectedEmotions.push(emotion);
-      }
-    });
-
-    // Generate appropriate responses
-    let response = '';
-    let priority: Message['priority'] = 'medium';
-    let responseType: 'emotional_support' | 'informational' = 'informational';
-
-    if (detectedEmotions.length > 0) {
-      responseType = 'emotional_support';
-      priority = 'high';
+    try {
+      setApiError(null);
       
-      if (detectedEmotions.includes('anxiety')) {
-        response = `I can sense you're feeling anxious, and that's completely understandable. The ILP journey can feel overwhelming at times. Remember, anxiety is your mind trying to prepare you for challenges, which shows you care about doing well. 
+      const API_URL = 'http://localhost:5000/api/chat';
+      
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          isAnonymous: isAnonymous
+        }),
+      });
 
-Take a deep breath with me - in for 4 counts, hold for 4, out for 6. You're not alone in this feeling, and it doesn't define your capabilities.
-
-Would you like some specific techniques to manage these anxious feelings, or would you prefer to talk about what's specifically worrying you? 💙`;
-      } else if (detectedEmotions.includes('overwhelm')) {
-        response = `Feeling overwhelmed is so common during ILP - you're processing a lot of new information and experiences. It's okay to feel this way, and it's actually a sign that you're pushing yourself to grow.
-
-Let's break this down together. When we feel overwhelmed, it often helps to focus on just one small thing at a time. What's one small step you could take today that would make you feel a bit more in control?
-
-Remember: You don't have to master everything at once. Progress, not perfection. 🌟`;
-      } else if (detectedEmotions.includes('homesick')) {
-        response = `Homesickness during ILP is so natural and shows how much your support system means to you. It's not a weakness - it's love for the people and places that shaped you.
-
-This feeling will ease as you build new connections and create a sense of belonging in your new environment. In the meantime, staying connected with home while also opening yourself to new friendships can help.
-
-What's one thing about home that you miss most? Sometimes talking about it can help process these feelings. 🤗`;
-      } else {
-        response = `I can hear that you're going through something challenging right now. Your feelings are valid, and it's brave of you to reach out.
-
-The ILP journey has ups and downs for everyone, and experiencing difficult emotions doesn't mean you're not cut out for this - it means you're human and you're growing.
-
-I'm here to listen and support you through this. What would feel most helpful right now - some practical strategies, or would you like to talk more about what's on your mind? 💙`;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } else if (lowerMessage.includes('ilp') || lowerMessage.includes('program')) {
-      response = `Great question about the ILP program! The Initial Learning Program is designed to give you a comprehensive foundation in technology and professional skills.
 
-The program typically includes:
-- Technical training modules in your chosen stream
-- Soft skills development sessions  
-- Project-based learning experiences
-- Peer collaboration opportunities
-- Mentorship and support systems
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Unknown API error');
+      }
 
-Is there a specific aspect of the ILP structure you'd like to know more about? I'm here to help you navigate any part of your journey! 🚀`;
-    } else {
-      response = `Thank you for sharing that with me! I'm here to support you throughout your ILP journey, whether it's technical questions, emotional support, or just someone to talk to.
+      return {
+        content: data.message,
+        priority: data.priority,
+        category: data.category,
+        emotions_detected: data.emotions_detected || [],
+        response_type: data.response_type || 'informational'
+      };
+      
+    } catch (error) {
+      console.error('API Error:', error);
+      setApiError(error instanceof Error ? error.message : 'Unknown error');
+      
+      return {
+        content: `I'm experiencing technical difficulties connecting to my support systems. This might be because the Flask server isn't running. Please make sure to run: python app.py
 
-Every question and concern you have is important. Feel free to share whatever is on your mind - there's no topic too big or small.
-
-How can I best support you today? 💙`;
+Your ILP journey matters, and so do your feelings. Please try again in a moment.`,
+        priority: 'medium' as const,
+        category: 'technical',
+        emotions_detected: [],
+        response_type: 'emotional_support' as const
+      };
     }
-
-    return {
-      content: response,
-      priority,
-      category: detectedEmotions.length > 0 ? 'wellness' : 'general',
-      emotions_detected: detectedEmotions,
-      response_type: responseType
-    };
   };
 
   const sendMessage = async (content: string, isQuickReply = false) => {
@@ -321,7 +279,6 @@ How can I best support you today? 💙`;
     setIsTyping(true);
 
     try {
-      // Get AI response from mock backend with emotional intelligence
       const response = await sendToAPI(content, currentAnonymous);
       
       const botResponse: Message = {
@@ -335,18 +292,16 @@ How can I best support you today? 💙`;
         response_type: response.response_type
       };
 
-      // Add extra delay for emotional support responses to feel more human and thoughtful
       const delay = response.response_type === 'emotional_support' ? 2500 : 1500;
       
       setTimeout(() => {
         setIsTyping(false);
         setMessages(prev => [...prev, botResponse]);
         
-        // Automatically speak Maya's response if voice is enabled
         if (isVoiceEnabled) {
           setTimeout(() => {
-            speakText(response.content, botResponse.id);
-          }, 500); // Small delay to ensure message is rendered
+            speakText(response.content);
+          }, 500);
         }
       }, delay);
 
@@ -356,7 +311,7 @@ How can I best support you today? 💙`;
       setTimeout(() => {
         const errorResponse: Message = {
           id: (Date.now() + 1).toString(),
-          content: "I'm experiencing some technical difficulties, but I want you to know that I'm still here for you. Your ILP journey matters, and so do your feelings. Please try again when you're ready. 💙",
+          content: "I encountered a technical issue, but I'm here to support you. Please try again.",
           sender: 'bot',
           timestamp: new Date(),
           priority: 'low',
@@ -366,10 +321,9 @@ How can I best support you today? 💙`;
         setIsTyping(false);
         setMessages(prev => [...prev, errorResponse]);
         
-        // Speak error response if voice enabled
         if (isVoiceEnabled) {
           setTimeout(() => {
-            speakText(errorResponse.content, errorResponse.id);
+            speakText(errorResponse.content);
           }, 500);
         }
       }, 1500);
@@ -386,10 +340,10 @@ How can I best support you today? 💙`;
   const handleMoodSelection = (mood: typeof userMood) => {
     setUserMood(mood);
     const moodMessages = {
-      'great': "That's wonderful to hear! 🌟 I'm so glad you're feeling great. What's going particularly well in your ILP journey?",
-      'good': "I'm happy you're feeling good! 😊 Keep up that positive energy. Is there anything specific that's contributing to your good mood?",
-      'okay': "It's completely normal to feel 'okay' sometimes. 💙 Every day in ILP doesn't have to be perfect. Would you like to talk about what's on your mind?",
-      'struggling': "I hear you, and I want you to know that struggling is a normal part of the ILP experience. You're not alone in this. 🤗 Would you like to share what's making things challenging right now?"
+      'great': "That's wonderful to hear! What's going particularly well in your ILP journey?",
+      'good': "I'm happy you're feeling good! Is there anything specific that's contributing to your good mood?",
+      'okay': "It's completely normal to feel 'okay' sometimes. Would you like to talk about what's on your mind?",
+      'struggling': "I hear you, and struggling is a normal part of the ILP experience. You're not alone. Would you like to share what's making things challenging?"
     };
     
     if (mood) {
@@ -431,7 +385,7 @@ How can I best support you today? 💙`;
 
   return (
     <div className="w-full h-[700px] flex flex-col bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
-      {/* Enhanced Header */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -444,7 +398,13 @@ How can I best support you today? 💙`;
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Voice Controls */}
+            {apiError && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-red-100 rounded text-xs text-red-700">
+                <AlertTriangle className="w-3 h-3" />
+                API Issue
+              </div>
+            )}
+            
             <div className="flex items-center gap-1">
               <button
                 onClick={toggleVoice}
@@ -462,7 +422,6 @@ How can I best support you today? 💙`;
                 <button
                   onClick={pauseOrResumeVoice}
                   className="flex items-center gap-1 px-2 py-1 bg-white/20 hover:bg-white/30 rounded text-sm transition-colors"
-                  title={speechSynthesis.paused ? "Resume" : "Pause"}
                 >
                   {speechSynthesis.paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                 </button>
@@ -481,40 +440,30 @@ How can I best support you today? 💙`;
               {currentAnonymous ? 'Anonymous' : 'Identified'}
             </button>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm">Online</span>
+              <div className={`w-2 h-2 rounded-full animate-pulse ${apiError ? 'bg-red-400' : 'bg-green-400'}`}></div>
+              <span className="text-sm">{apiError ? 'API Error' : 'Online'}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Voice Status Indicator */}
+      {/* Voice Status */}
       {isSpeaking && (
         <div className="bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-2 border-b flex items-center justify-center gap-2">
           <Volume2 className="w-4 h-4 text-purple-600 animate-pulse" />
           <span className="text-sm text-purple-700">Maya is speaking...</span>
-          <div className="flex space-x-1">
-            <div className="w-1 h-4 bg-purple-400 rounded-full animate-pulse"></div>
-            <div className="w-1 h-4 bg-pink-400 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-1 h-4 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-          </div>
         </div>
       )}
 
-      {/* Listening Indicator */}
+      {/* Listening Status */}
       {isListening && (
         <div className="bg-gradient-to-r from-green-100 to-blue-100 px-4 py-2 border-b flex items-center justify-center gap-2">
           <Mic className="w-4 h-4 text-green-600 animate-pulse" />
           <span className="text-sm text-green-700">Listening... Speak now</span>
-          <div className="flex space-x-1">
-            <div className="w-1 h-3 bg-green-400 rounded-full animate-bounce"></div>
-            <div className="w-1 h-4 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-1 h-3 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-          </div>
         </div>
       )}
 
-      {/* Mood Check Panel - Shows initially */}
+      {/* Mood Check Panel */}
       {!userMood && messages.length === 1 && (
         <div className="bg-gradient-to-r from-pink-50 to-purple-50 border-b p-4">
           <div className="text-center">
@@ -562,7 +511,6 @@ How can I best support you today? 💙`;
               message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
             }`}
           >
-            {/* Enhanced Avatar */}
             <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
               message.sender === 'bot' 
                 ? 'bg-gradient-to-br from-purple-400 to-pink-400' 
@@ -574,28 +522,23 @@ How can I best support you today? 💙`;
               }
             </div>
             
-            {/* Message Content */}
             <div className={`flex flex-col min-w-0 flex-1 max-w-[80%] ${
               message.sender === 'user' ? 'items-end' : 'items-start'
             }`}>
-              {/* Enhanced Message Header */}
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="text-xs font-medium text-gray-600">
                   {message.sender === 'bot' ? 'Maya (Support Companion)' : (message.isAnonymous ? 'You (Anonymous)' : 'You')}
                 </span>
                 
-                {/* Voice control for bot messages */}
                 {message.sender === 'bot' && isVoiceEnabled && (
                   <button
-                    onClick={() => speakText(message.content, message.id)}
+                    onClick={() => speakText(message.content)}
                     className="flex items-center gap-1 px-1 py-0.5 text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded transition-colors"
-                    title="Listen to this message"
                   >
                     <Volume2 className="w-3 h-3" />
                   </button>
                 )}
                 
-                {/* Emotion Indicator */}
                 {message.emotions_detected && message.emotions_detected.length > 0 && (
                   <span className="flex items-center gap-1">
                     {getEmotionIcon(message.emotions_detected)}
@@ -603,7 +546,6 @@ How can I best support you today? 💙`;
                   </span>
                 )}
                 
-                {/* Priority Badge */}
                 {message.priority && message.priority !== 'low' && (
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs text-white ${getPriorityColor(message.priority)}`}>
                     {getPriorityIcon(message.priority)}
@@ -616,7 +558,6 @@ How can I best support you today? 💙`;
                 </span>
               </div>
               
-              {/* Enhanced Message Bubble */}
               <div
                 className={`p-4 rounded-2xl max-w-full leading-relaxed shadow-sm ${
                   message.sender === 'user'
@@ -633,7 +574,6 @@ How can I best support you today? 💙`;
               >
                 <div className="whitespace-pre-wrap">{message.content}</div>
                 
-                {/* Support indicator for emotional responses */}
                 {message.sender === 'bot' && message.response_type === 'emotional_support' && (
                   <div className="mt-3 pt-3 border-t border-purple-100 flex items-center gap-2 text-xs text-purple-600">
                     <Heart className="w-3 h-3" />
@@ -645,7 +585,6 @@ How can I best support you today? 💙`;
           </div>
         ))}
         
-        {/* Enhanced Typing Indicator */}
         {isTyping && (
           <div className="flex gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center flex-shrink-0">
@@ -653,7 +592,7 @@ How can I best support you today? 💙`;
             </div>
             <div className="bg-white p-4 rounded-2xl rounded-tl-md border border-gray-200 shadow-sm">
               <div className="flex space-x-1 items-center">
-                <span className="text-sm text-gray-500 mr-2">Maya is thinking with care...</span>
+                <span className="text-sm text-gray-500 mr-2">Maya is thinking...</span>
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -664,7 +603,7 @@ How can I best support you today? 💙`;
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Dynamic Quick Actions Panel */}
+      {/* Quick Actions Panel */}
       <div className="border-t bg-gradient-to-r from-purple-50 to-pink-50 p-4">
         <div className="mb-3">
           <div className="flex items-center justify-between mb-2">
@@ -704,7 +643,6 @@ How can I best support you today? 💙`;
             </button>
           </div>
           
-          {/* Quick Action Buttons */}
           <div className="flex flex-wrap gap-2">
             {(showQuickActions === 'emotional' ? emotionalQuestions : predefinedQuestions)
               .slice(0, 3).map((question, index) => (
@@ -724,7 +662,6 @@ How can I best support you today? 💙`;
           </div>
         </div>
 
-        {/* Wellness Resources Panel */}
         {showWellnessPanel && (
           <div className="mt-3 p-3 bg-white rounded-lg border border-purple-200">
             <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
@@ -751,22 +688,20 @@ How can I best support you today? 💙`;
         )}
       </div>
 
-      {/* Enhanced Input Area */}
+      {/* Input Area */}
       <div className="border-t bg-white p-4">
         <form onSubmit={handleSubmit} className="flex items-end gap-3">
-          {/* Main Input Section */}
           <div className="flex-1 relative">
             <input
               ref={inputRef}
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder={isTyping ? "Maya is responding..." : "Share what's on your mind... Maya is here to listen 💙"}
+              placeholder={isTyping ? "Maya is responding..." : "Share what's on your mind..."}
               disabled={isTyping}
               className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 pr-12"
             />
             
-            {/* Voice Input Button */}
             <button
               type="button"
               onClick={toggleListening}
@@ -782,7 +717,6 @@ How can I best support you today? 💙`;
             </button>
           </div>
 
-          {/* Send Button */}
           <button
             type="submit"
             disabled={!inputValue.trim() || isTyping}
@@ -806,12 +740,11 @@ How can I best support you today? 💙`;
           </button>
         </form>
 
-        {/* Input Helper Text */}
         <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center gap-4">
-            <span>✨ Safe space for sharing</span>
-            <span>🤗 No judgment here</span>
-            <span>💪 You're doing great!</span>
+            <span>Safe space for sharing</span>
+            <span>No judgment here</span>
+            <span>You're doing great!</span>
           </div>
           {currentAnonymous && (
             <span className="flex items-center gap-1 text-purple-600">
